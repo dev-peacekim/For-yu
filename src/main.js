@@ -1,6 +1,8 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
 import App from './App.vue'
+import router from './router';
 
-createApp(App).mount('#app')
+const app = createApp(App)
+
+app.use(router)      // 👈 라우터 먼저 연결
+app.mount('#app')   // 👈 그 다음 mount
