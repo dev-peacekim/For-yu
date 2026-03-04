@@ -1,6 +1,5 @@
 <template>
 	<div class="start-page">
-		<audio ref="bgm" :src="bgmSrc" loop preload="auto"></audio>
 		<div class="overlay">
 			<h1 class="title">
 				<span class="char" style="--i:0">F</span>
@@ -22,64 +21,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
-import bgmSrc from "@/assets/audio/cocktail_paradise.mp3"
+import { inject } from "vue"
+import { useRouter } from "vue-router"
 
-const bgm = ref(null)
-let fadeTimer = null
-let started = false
-
-const fadeIn = (targetVolume = 0.25, durationMs = 2500) => {
-	const audio = bgm.value
-	if (!audio) return
-
-	// 시작 볼륨 0에서 목표 볼륨까지
-	audio.volume = 0
-
-	const stepMs = 50
-	const steps = Math.max(1, Math.floor(durationMs / stepMs))
-	const delta = targetVolume / steps
-	let v = 0
-
-	clearInterval(fadeTimer)
-	fadeTimer = setInterval(() => {
-		v = Math.min(targetVolume, v + delta)
-		audio.volume = v
-		if (v >= targetVolume) clearInterval(fadeTimer)
-	}, stepMs)
-}
-
-const tryPlay = async () => {
-	const audio = bgm.value
-	if (!audio) return
-
-	// 자동재생 정책 때문에 실패할 수 있음
-	try {
-		await audio.play()
-		fadeIn(0.25, 2500) // ✅ 작은 볼륨 + 천천히
-		started = true
-	} catch (e) {
-		// 자동재생 차단이면 클릭 때 시작
-	}
-}
-
-// 1) 로드 시 자동재생 “시도”
-onMounted(() => {
-	tryPlay()
-})
-
-// 2) 어디든 첫 클릭하면 무조건 재생되게 (1회만)
-const startBgmOnce = async () => {
-	if (started) return
-	await tryPlay()
-}
+const router = useRouter()
+const playBgm = inject("playBgm") // App.vue에서 제공한 함수
 
 const start = async () => {
-	// "시작하기" 누르면 음악도 확실히 켜지게
-	await startBgmOnce()
-
-	console.log("시작 페이지 이동")
-	// router.push('/story')
+	if (playBgm) await playBgm()
+	//router.push("/story") // 다음 페이지
 }
 </script>
 
@@ -99,12 +49,13 @@ const start = async () => {
 .overlay {
 	text-align: center;
 	color: white;
+	transform: translateY(180px);
 }
 
 /* 메인 문구 */
 .title {
 	font-size: 150px;
-	margin-bottom: 25px;
+	margin-bottom: 10px;
 	line-height: 1.4;
 	text-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 	font-family: "Fitzgerald";
@@ -112,19 +63,36 @@ const start = async () => {
 
 /* 시작하기 텍스트 */
 .start-text {
+	display: inline-block;
+	/* 핵심 */
+
 	font-size: 24px;
 	cursor: pointer;
-	transition: all 0.25s ease;
-	text-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+
+	padding: 10px 22px;
+	border-radius: 12px;
+
+	background: rgba(255, 255, 255, 0.12);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+
+	border: 1px solid rgba(255, 255, 255, 0.25);
+
+	color: white;
 	font-family: "Pretendard";
 	font-weight: 700;
+
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+	transition: all 0.25s ease;
 }
 
 /* 마우스 올리면 */
 .start-text:hover {
-	opacity: 1;
-	transform: scale(1.05);
-	text-decoration: underline;
+	background: rgba(255, 255, 255, 0.2);
+	transform: translateY(-2px) scale(1.05);
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 .char {
@@ -135,7 +103,7 @@ const start = async () => {
 }
 
 .start {
-	animation-delay: calc(1.2s + var(--i) * 0.07s);
+	animation-delay: calc(0.5s + var(--i) * 0.07s);
 }
 
 @keyframes dissolve {
@@ -151,5 +119,4 @@ const start = async () => {
 		transform: translateY(0);
 	}
 }
-
 </style>
